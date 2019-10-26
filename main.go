@@ -28,7 +28,7 @@ func main() {
 	router.HandleFunc("/zfs-event/test", api.Test).Methods("POST")
 
 	// Launch server
-	err := http.ListenAndServe(":8000", handler)
+	err := http.ListenAndServe(":9090", handler)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
