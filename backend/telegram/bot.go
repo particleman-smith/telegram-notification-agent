@@ -54,6 +54,9 @@ func NewBot() *Bot {
 	defer jsonFile.Close()
 
 	b.BotAPI = *bot
+
+	defer b.ListenForUpdates()
+
 	return b
 }
 
@@ -71,4 +74,52 @@ func (bot Bot) SendMessage(body string) error {
 	}
 
 	return nil
+}
+
+/*
+ListenForUpdates is a wrapper for the ListenForUpdatesRoutine
+*/
+func (bot Bot) ListenForUpdates() {
+	go bot.ListenForUpdatesRoutine()
+}
+
+/*
+ListenForUpdatesRoutine intemittently receives updates and responds to commands
+*/
+func (bot Bot) ListenForUpdatesRoutine() {
+	u := tgbotapi.NewUpdate(0)
+	u.Timeout = 60
+	updates, err := bot.BotAPI.GetUpdatesChan(u)
+
+	if err != nil {
+		println("Error getting updates.")
+		log.Fatal(err)
+	}
+
+	for update := range updates {
+		if update.Message == nil {
+			continue
+		}
+
+		log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
+
+		ReplyToCommand(&bot.BotAPI, update.Message)
+	}
+}
+
+func ReplyToCommand(botAPI *tgbotapi.BotAPI, incoming *tgbotapi.Message) {
+	if incoming.IsCommand() {
+		msg := tgbotapi.NewMessage(incoming.Chat.ID, "")
+		switch incoming.Command() {
+		case "help":
+			msg.Text = "type /sayhi or /status."
+		case "sayhi":
+			msg.Text = "Hi :)"
+		case "status":
+			msg.Text = "I'm ok."
+		default:
+			msg.Text = "I don't know that command"
+		}
+		botAPI.Send(msg)
+	}
 }
