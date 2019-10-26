@@ -25,7 +25,9 @@ func main() {
 	handler := c.Handler(router)
 
 	// Set routes
-	router.HandleFunc("/zfs-event/test", api.Test).Methods("POST")
+	router.HandleFunc("/test", api.Test).Methods("POST")
+	router.HandleFunc("/zfs-event/status", api.Test).Methods("POST")
+	router.HandleFunc("/backup-event/failure", api.Test).Methods("POST")
 
 	// Launch server
 	err := http.ListenAndServe(":9090", handler)

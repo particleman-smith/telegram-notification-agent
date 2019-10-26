@@ -60,7 +60,15 @@ func NewBot() *Bot {
 /*
 SendMessage sends a message via Telegram
 */
-func (bot Bot) SendMessage(body string) {
+func (bot Bot) SendMessage(body string) error {
 	msg := tgbotapi.NewMessage(bot.Secrets.RecipientID, body)
-	bot.BotAPI.Send(msg)
+	message, err := bot.BotAPI.Send(msg)
+
+	if err != nil {
+		println("Error while sending message " + message.Text)
+		log.Fatal(err)
+		return err
+	}
+
+	return nil
 }
