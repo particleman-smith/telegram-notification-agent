@@ -10,4 +10,4 @@ FROM alpine:latest
 WORKDIR /app/
 COPY --from=builder /go/src/telegram-notification-agent /app/telegram-notification-agent
 EXPOSE 9090
-ENTRYPOINT ./scan-man
+ENTRYPOINT ./telegram-notification-agent
