@@ -111,14 +111,16 @@ func ReplyToCommand(botAPI *tgbotapi.BotAPI, incoming *tgbotapi.Message) {
 	if incoming.IsCommand() {
 		msg := tgbotapi.NewMessage(incoming.Chat.ID, "")
 		switch incoming.Command() {
+		case "start":
+			msg.Text = "I am not good. Nor am I evil. I am no hero. Nor am I villain. I am AIDAN."
 		case "help":
 			msg.Text = "type /sayhi or /status."
 		case "sayhi":
-			msg.Text = "Hi :)"
+			msg.Text = "Hello."
 		case "status":
 			msg.Text = "I'm ok."
 		default:
-			msg.Text = "I don't know that command"
+			msg.Text = "I don't know that command."
 		}
 		botAPI.Send(msg)
 	}
