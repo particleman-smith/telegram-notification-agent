@@ -10,7 +10,7 @@ import (
 
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
-	"github.com/particleman-smith/telegram-notification-agent/backend/api"
+	"github.com/particleman-smith/telegram-notification-agent/app/api"
 	"github.com/rs/cors"
 )
 
@@ -47,4 +47,6 @@ func main() {
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
+
+	println("Listening on port 9090")
 }
