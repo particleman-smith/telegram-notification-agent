@@ -67,7 +67,9 @@ func Error(writer http.ResponseWriter, request *http.Request) {
 	// Bash
 	case "/bash-event/exec-failure":
 		script := bodyMap["script"]
+		reason := bodyMap["reason"]
 		msg += "I encountered a failure running the Python script `" + fmt.Sprintf("%v", script) + "`."
+		msg += "\n" + fmt.Sprintf("%v", reason)
 	// ZFS
 	case "/zfs-event/data-error":
 		msg += "I noticed data corruption on a ZFS vdev."
