@@ -7,16 +7,19 @@ package telegram
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"log"
 	"os"
+	"strconv"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
 type Bot struct {
-	BotAPI  tgbotapi.BotAPI
-	Secrets Secrets
+	BotAPI   tgbotapi.BotAPI
+	APIToken string
+	Owner    int64
 }
 
 /*
@@ -24,34 +27,56 @@ Secrets are used for unmarshaling the data from secrets.json
 */
 type Secrets struct {
 	BotAPIToken string `json:"BotAPIToken`
-	RecipientID int64  `json:"RecipientID`
+	SudoerID    int64  `json:"RecipientID`
 }
 
 /*
 NewBot creates a new instance of the Bot struct
 */
 func NewBot() *Bot {
-	// Get APIToken from secrets.json
-	jsonFile, jsonErr := os.Open("./secrets.json")
-	if jsonErr != nil {
-		log.Panic(jsonErr)
-	}
-
-	// Read opened as a byte array.
-	byteValue, _ := ioutil.ReadAll(jsonFile)
-
-	var secrets Secrets
-	// Unmarshal JSON into secrets
-	json.Unmarshal(byteValue, &secrets)
+	println("Creating Telegram Api bot")
 
 	b := new(Bot)
-	b.Secrets = secrets
-	bot, err := tgbotapi.NewBotAPI(b.Secrets.BotAPIToken)
+
+	// Try to get the API token from the env
+	b.APIToken = os.Getenv("bot_token")
+	if b.APIToken == "" {
+		println("Using secrets.json for config")
+		// Get APIToken from secrets.json
+		jsonFile, jsonErr := os.Open("./secrets.json")
+		if jsonErr != nil {
+			log.Panic(jsonErr)
+		}
+
+		defer jsonFile.Close()
+
+		// Read opened as a byte array.
+		byteValue, _ := ioutil.ReadAll(jsonFile)
+
+		var secrets Secrets
+		// Unmarshal JSON into secrets
+		json.Unmarshal(byteValue, &secrets)
+		b.APIToken = secrets.BotAPIToken
+		b.Owner = secrets.SudoerID
+	} else {
+		println("Found environment variables")
+		// Convert to int64
+		owner, err := strconv.ParseInt(os.Getenv("sudoer_id"), 10, 64)
+		if err == nil {
+			b.Owner = owner
+		}
+	}
+
+	setupErr := b.CheckRequirements()
+
+	if setupErr != nil {
+		log.Panic(setupErr)
+	}
+
+	bot, err := tgbotapi.NewBotAPI(b.APIToken)
 	if err != nil {
 		log.Panic(err)
 	}
-
-	defer jsonFile.Close()
 
 	b.BotAPI = *bot
 
@@ -64,7 +89,7 @@ func NewBot() *Bot {
 SendMessage sends a message via Telegram
 */
 func (bot Bot) SendMessage(body string) error {
-	msg := tgbotapi.NewMessage(bot.Secrets.RecipientID, body)
+	msg := tgbotapi.NewMessage(bot.Owner, body)
 	message, err := bot.BotAPI.Send(msg)
 
 	if err != nil {
@@ -124,4 +149,11 @@ func ReplyToCommand(botAPI *tgbotapi.BotAPI, incoming *tgbotapi.Message) {
 		}
 		botAPI.Send(msg)
 	}
+}
+
+func (b Bot) CheckRequirements() error {
+	if b.APIToken == "" || b.Owner <= 0 {
+		return errors.New("Either the APIToken, Owner, or both were not found for this bot. Please check the secrets.json or env.conf files")
+	}
+	return nil
 }

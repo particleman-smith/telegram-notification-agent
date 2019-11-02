@@ -9,7 +9,6 @@ RUN go install -tags netgo -a -v
 FROM alpine:latest
 RUN mkdir /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
 WORKDIR /app/
-COPY --from=builder /go/src/github.com/particleman-smith/telegram-notification-agent/app/secrets.json /app/secrets.json
 COPY --from=builder /go/bin/app /app/telegram-notification-agent
 EXPOSE 9090
 ENTRYPOINT ./telegram-notification-agent

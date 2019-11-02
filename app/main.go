@@ -42,11 +42,11 @@ func main() {
 
 	// SMART
 
+	println("Launching server on port 9090")
+
 	// Launch server
 	err := http.ListenAndServe(":9090", handler)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
-
-	println("Listening on port 9090")
 }

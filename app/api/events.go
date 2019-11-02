@@ -22,7 +22,7 @@ func Test(writer http.ResponseWriter, request *http.Request) {
 	fmt.Println("ZFS Event 'Test' received.")
 
 	fmt.Println("Sending Telegram message.")
-	err := telegramBot.SendMessage("I just received a test API message!")
+	err := telegramBot.SendMessage("I just received a test API message.")
 
 	returnMsg := ""
 
