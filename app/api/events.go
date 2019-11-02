@@ -10,7 +10,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/particleman-smith/telegram-notification-agent/backend/telegram"
+	"github.com/particleman-smith/telegram-notification-agent/app/telegram"
 )
 
 var telegramBot = telegram.NewBot()
@@ -22,7 +22,7 @@ func Test(writer http.ResponseWriter, request *http.Request) {
 	fmt.Println("ZFS Event 'Test' received.")
 
 	fmt.Println("Sending Telegram message.")
-	err := telegramBot.SendMessage("Hey, I just got a test message!")
+	err := telegramBot.SendMessage("I just received a test API message.")
 
 	returnMsg := ""
 

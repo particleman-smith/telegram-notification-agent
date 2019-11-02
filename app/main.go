@@ -10,7 +10,7 @@ import (
 
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
-	"github.com/particleman-smith/telegram-notification-agent/backend/api"
+	"github.com/particleman-smith/telegram-notification-agent/app/api"
 	"github.com/rs/cors"
 )
 
@@ -41,6 +41,8 @@ func main() {
 	router.HandleFunc("/backup-event/failure", api.Test).Methods("POST")
 
 	// SMART
+
+	println("Launching server on port 9090")
 
 	// Launch server
 	err := http.ListenAndServe(":9090", handler)
