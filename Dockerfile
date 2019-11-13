@@ -1,7 +1,7 @@
 # Builder stage
 FROM golang as builder
-COPY app /go/src/github.com/particleman-smith/telegram-notification-agent/app
-WORKDIR /go/src/github.com/particleman-smith/telegram-notification-agent/app
+COPY app /go/src/github.com/the-codesmith/telegram-notification-agent/app
+WORKDIR /go/src/github.com/the-codesmith/telegram-notification-agent/app
 RUN go get -v -u github.com/gorilla/mux && go get -v -u github.com/lib/pq && go get -v -u github.com/rs/cors && go get -v -u github.com/go-telegram-bot-api/telegram-bot-api
 RUN go install -tags netgo -a -v
 
