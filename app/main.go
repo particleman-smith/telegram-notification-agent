@@ -10,7 +10,6 @@ import (
 
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
-	"github.com/particleman-smith/telegram-notification-agent/app/api"
 	"github.com/rs/cors"
 )
 
@@ -28,17 +27,18 @@ func main() {
 	/// Set routes
 	//
 
-	router.HandleFunc("/test", api.Test).Methods("POST")
+	router.HandleFunc("/test", Test).Methods("POST")
 
 	// Bash
-	router.HandleFunc("/bash-event/exec-failure", api.Error).Methods("POST")
+	router.HandleFunc("/bash-event/exec-failure", Error).Methods("POST")
 
 	// ZFS
-	router.HandleFunc("/zfs-event/data-error", api.Error).Methods("POST")
-	router.HandleFunc("/zfs-event/zpool-state", api.Error).Methods("POST")
+	router.HandleFunc("/zfs-event/data-error", Error).Methods("POST")
+	router.HandleFunc("/zfs-event/zpool-state", Error).Methods("POST")
 
 	// Backup
-	router.HandleFunc("/backup-event/failure", api.Test).Methods("POST")
+	router.HandleFunc("/backup-event/failure", Error).Methods("POST")
+	router.HandleFunc("/backup-event/success", Info).Methods("POST")
 
 	// SMART
 
