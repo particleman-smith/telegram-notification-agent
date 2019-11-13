@@ -3,69 +3,34 @@ Controls sending and receipt of messages through Telegram using the
 telegramsender and telegramreceiver
 */
 
-package telegram
+package main
 
 import (
-	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"log"
-	"os"
-	"strconv"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
-type Bot struct {
-	BotAPI   tgbotapi.BotAPI
-	APIToken string
-	Owner    int64
-}
-
 /*
-Secrets are used for unmarshaling the data from secrets.json
+Bot is used to store the Telegram BotAPI as well as its APIToke and the user ID of the owner.
 */
-type Secrets struct {
-	BotAPIToken string `json:"BotAPIToken`
-	SudoerID    int64  `json:"RecipientID`
+type Bot struct {
+	BotAPI   tgbotapi.BotAPI // The interface to Telegram
+	APIToken string          // The APIToken used to control the Telegram bot
+	Owner    int64           // The user ID of the owner of the bot, used as the recipient of messages triggered by events
 }
 
 /*
 NewBot creates a new instance of the Bot struct
 */
-func NewBot() *Bot {
+func NewBot(s Secrets) *Bot {
 	println("Creating Telegram Api bot")
 
 	b := new(Bot)
 
-	// Try to get the API token from the env
-	b.APIToken = os.Getenv("bot_token")
-	if b.APIToken == "" {
-		println("Using secrets.json for config")
-		// Get APIToken from secrets.json
-		jsonFile, jsonErr := os.Open("./secrets.json")
-		if jsonErr != nil {
-			log.Panic(jsonErr)
-		}
-
-		defer jsonFile.Close()
-
-		// Read opened as a byte array.
-		byteValue, _ := ioutil.ReadAll(jsonFile)
-
-		var secrets Secrets
-		// Unmarshal JSON into secrets
-		json.Unmarshal(byteValue, &secrets)
-		b.APIToken = secrets.BotAPIToken
-		b.Owner = secrets.SudoerID
-	} else {
-		println("Found environment variables")
-		// Convert to int64
-		owner, err := strconv.ParseInt(os.Getenv("sudoer_id"), 10, 64)
-		if err == nil {
-			b.Owner = owner
-		}
-	}
+	b.APIToken = s.BotAPIToken
+	b.Owner = s.SudoerID
 
 	setupErr := b.CheckRequirements()
 
@@ -132,6 +97,9 @@ func (bot Bot) ListenForUpdatesRoutine() {
 	}
 }
 
+/*
+ReplyToCommand handles commands sent from a user to the bot
+*/
 func ReplyToCommand(botAPI *tgbotapi.BotAPI, incoming *tgbotapi.Message) {
 	if incoming.IsCommand() {
 		msg := tgbotapi.NewMessage(incoming.Chat.ID, "")
@@ -143,7 +111,7 @@ func ReplyToCommand(botAPI *tgbotapi.BotAPI, incoming *tgbotapi.Message) {
 		case "sayhi":
 			msg.Text = "Hello."
 		case "status":
-			msg.Text = "I'm ok."
+			msg.Text = "Up and running."
 		default:
 			msg.Text = "I don't know that command."
 		}
@@ -151,8 +119,11 @@ func ReplyToCommand(botAPI *tgbotapi.BotAPI, incoming *tgbotapi.Message) {
 	}
 }
 
-func (b Bot) CheckRequirements() error {
-	if b.APIToken == "" || b.Owner <= 0 {
+/*
+CheckRequirements ensures that the necessary secrets for the given Bot have been obtained
+*/
+func (bot Bot) CheckRequirements() error {
+	if bot.APIToken == "" || bot.Owner <= 0 {
 		return errors.New("Either the APIToken, Owner, or both were not found for this bot. Please check the secrets.json or env.conf files")
 	}
 	return nil

@@ -1,28 +1,32 @@
 /*
-Responsd to ZFS event HTTP requests
+Controller methods to respond to event HTTP requests
 */
 
-package api
+package main
 
 import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
-
-	"github.com/particleman-smith/telegram-notification-agent/app/telegram"
 )
 
-var telegramBot = telegram.NewBot()
+var _secrets = GetSecrets()
+var _telegramBot = NewBot(*_secrets)
 
 /*
 Test sends the given message via the Telegram Bot
 */
 func Test(writer http.ResponseWriter, request *http.Request) {
+	if !CheckAPIToken(request.Header.Get("Access-Token")) {
+		http.Error(writer, "Invalid access token", 401)
+		return
+	}
+
 	fmt.Println("ZFS Event 'Test' received.")
 
 	fmt.Println("Sending Telegram message.")
-	err := telegramBot.SendMessage("I just received a test API message.")
+	err := _telegramBot.SendMessage("I just received a test API message.")
 
 	returnMsg := ""
 
@@ -42,6 +46,11 @@ func Test(writer http.ResponseWriter, request *http.Request) {
 Error sends an error message via the Telegram Bot. The error message is based on the request URL path.
 */
 func Error(writer http.ResponseWriter, request *http.Request) {
+	if !CheckAPIToken(request.Header.Get("Access-Token")) {
+		http.Error(writer, "Invalid access token", 401)
+		return
+	}
+
 	// Read body and handle errors
 	body, readErr := ioutil.ReadAll(request.Body)
 	if readErr != nil {
@@ -75,7 +84,7 @@ func Error(writer http.ResponseWriter, request *http.Request) {
 		msg += "I noticed data corruption on a ZFS vdev."
 	case "/zfs-event/zpool-state":
 		state := fmt.Sprintf("%v", bodyMap["status"])
-		msg += "A disk in a ZFS vdev has entered " + AOrAn(state) + state + " state!"
+		msg += "A a ZFS vdev has entered " + AOrAn(state) + state + " state!"
 	// Backup
 	case "/backup-event/failure":
 		msg += "I encountered a failure backing up /home, /etc, or /var."
@@ -83,7 +92,7 @@ func Error(writer http.ResponseWriter, request *http.Request) {
 
 	if send {
 		// Send the message via Telegram
-		sendErr := telegramBot.SendMessage(msg)
+		sendErr := _telegramBot.SendMessage(msg)
 
 		// Handle Telegram send errors
 		if sendErr != nil {
@@ -92,6 +101,16 @@ func Error(writer http.ResponseWriter, request *http.Request) {
 			json.NewEncoder(writer).Encode(returnMsg)
 		}
 	}
+}
+
+/*
+CheckAPIToken compares the given secret the the APIToken in the config and returns whether or not they match
+*/
+func CheckAPIToken(secret string) bool {
+	if secret == _secrets.AccessToken {
+		return true
+	}
+	return false
 }
 
 /*
