@@ -37,7 +37,8 @@ func main() {
 	router.HandleFunc("/zfs-event/zpool-state", Error).Methods("POST")
 
 	// Backup
-	router.HandleFunc("/backup-event/failure", Test).Methods("POST")
+	router.HandleFunc("/backup-event/failure", Error).Methods("POST")
+	router.HandleFunc("/backup-event/success", Info).Methods("POST")
 
 	// SMART
 

@@ -51,20 +51,10 @@ func Error(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	// Read body and handle errors
-	body, readErr := ioutil.ReadAll(request.Body)
+	bodyMap, readErr := GetBodyMapFromRequest(request)
+
 	if readErr != nil {
-		http.Error(writer, readErr.Error(), 500)
-		return
-	}
-	defer request.Body.Close()
-
-	// Parse the body into an interface
-	var bodyMap map[string]interface{}
-	parseErr := json.Unmarshal([]byte(body), &bodyMap)
-
-	if parseErr != nil {
-		http.Error(writer, "Could not parse body.\n"+parseErr.Error(), 500)
+		http.Error(writer, "Could not parse body.\n"+readErr.Error(), 500)
 		return
 	}
 
@@ -104,6 +94,44 @@ func Error(writer http.ResponseWriter, request *http.Request) {
 }
 
 /*
+Info sends a message containing misc info via the the Telegram Bot. The message is based on the request URL path.
+*/
+func Info(writer http.ResponseWriter, request *http.Request) {
+	if !CheckAPIToken(request.Header.Get("Access-Token")) {
+		http.Error(writer, "Invalid access token", 401)
+		return
+	}
+
+	_, err := GetBodyMapFromRequest(request)
+
+	if err != nil {
+		http.Error(writer, "Could not parse body.\n"+err.Error(), 500)
+		return
+	}
+
+	send := true
+	msg := "INFO\n"
+
+	// Info types
+	switch request.URL.Path {
+	case "/backup-event/success":
+		msg += "AIDAN backed up successfully."
+	}
+
+	if send {
+		// Send the message via Telegram
+		sendErr := _telegramBot.SendMessage(msg)
+
+		// Handle Telegram send errors
+		if sendErr != nil {
+			returnMsg := "Message failed to send."
+			fmt.Println(returnMsg)
+			json.NewEncoder(writer).Encode(returnMsg)
+		}
+	}
+}
+
+/*
 CheckAPIToken compares the given secret the the APIToken in the config and returns whether or not they match
 */
 func CheckAPIToken(secret string) bool {
@@ -111,6 +139,28 @@ func CheckAPIToken(secret string) bool {
 		return true
 	}
 	return false
+}
+
+/*
+GetBodyMapFromRequest reads the body of an http request and parses it into a map[string]interface{}
+*/
+func GetBodyMapFromRequest(request *http.Request) (map[string]interface{}, error) {
+	// Read body and handle errors
+	body, readErr := ioutil.ReadAll(request.Body)
+	if readErr != nil {
+		return nil, readErr
+	}
+	defer request.Body.Close()
+
+	// Parse the body into an interface
+	var bodyMap map[string]interface{}
+	parseErr := json.Unmarshal([]byte(body), &bodyMap)
+
+	if parseErr != nil {
+		return nil, parseErr
+	}
+
+	return bodyMap, nil
 }
 
 /*
